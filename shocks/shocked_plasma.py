@@ -36,18 +36,18 @@ class ShockedPlasma:
 
 
     def MHD_jump_condition(self):
-        r = compression_ratio(self.shock_velocity,
-                              self.upstream_plasma.plasma_parameters.sound_speed,
-                              self.upstream_plasma.plasma_parameters.alfven_speed,
-                              self.theta,
+        r = compression_ratio(self.shock_velocity.to(u.m/u.s),
+                              self.upstream_plasma.plasma_parameters.sound_speed.to(u.m/u.s),
+                              self.upstream_plasma.plasma_parameters.alfven_speed.to(u.m/u.s),
+                              self.theta.to(u.rad).value,
                               self.gamma)
 
-        R = pressure_ratio(self.shock_velocity,
-                           self.upstream_plasma.plasma_parameters.sound_speed,
-                           self.upstream_plasma.plasma_parameters.alfven_speed,
-                           self.theta,
+        R = pressure_ratio(self.shock_velocity.to(u.m/u.s),
+                           self.upstream_plasma.plasma_parameters.sound_speed.to(u.m/u.s),
+                           self.upstream_plasma.plasma_parameters.alfven_speed.to(u.m/u.s),
+                           self.theta.to(u.rad).value,
                            self.gamma)
-        print(r, R)
+
         if self.theta == 0:
             downstream_density = self.upstream_plasma.plasma_parameters.density * r
             downstream_flow = self.shock_velocity / r
