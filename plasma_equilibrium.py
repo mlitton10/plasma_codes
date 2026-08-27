@@ -1,9 +1,15 @@
+import numpy as np
 from astropy.units import Quantity
+from matplotlib import pyplot as plt
+from plasmapy.dispersion.analytical import two_fluid
 from plasmapy.formulary import Debye_length, gyroradius, inertial_length, mean_free_path, collision_frequency, \
     Spitzer_resistivity, beta, Debye_number, Hall_parameter, gyrofrequency, lower_hybrid_frequency, \
     upper_hybrid_frequency, plasma_frequency, Bohm_diffusion, Alfven_speed, ion_sound_speed, thermal_speed
 from plasmapy.particles import Particle
 from schemas import PlasmaParameters
+
+import astropy.units as u
+from astropy.constants import c
 
 
 class Plasma:
@@ -124,5 +130,104 @@ class Plasma:
 
         return misc
 
+    def two_fluid_dispersion(self, theta, k_space = None, plot=True, verbose=False):
+        if k_space is None:
+            k_space = 10**np.linspace(-4,4, 100000)
+
+        inputs = {
+            "k": k_space * u.rad / u.m,
+            "theta": theta,
+            "n_i": self.n,
+            "B": self.B,
+            "T_e": self.T_e,
+            "T_i": self.T_i,
+            "ion": self.ion,
+        }
+
+        # compute
+        omegas = two_fluid(**inputs)
+        k_prime = inputs["k"] * self.plasma_parameters.electron_inertial_length
+
+        if plot:
+            f,a = plt.subplots(1,1)
+            a.plot(
+                k_prime,
+                np.real(omegas["fast_mode"] / self.plasma_parameters.electron_plasma_frequency),
+                "r",
+                label="Fast",
+            )
+
+            a.plot(
+                k_prime,
+                np.real(omegas["alfven_mode"] / self.plasma_parameters.electron_plasma_frequency),
+                "b",
+                label="Alfvén",
+            )
+            a.plot(
+                k_prime,
+                np.real(omegas["acoustic_mode"] / self.plasma_parameters.electron_plasma_frequency),
+                "g",
+                ms=1,
+                label="Acoustic",
+            )
+            if verbose:
+                a.axhline(self.plasma_parameters.ion_plasma_frequency/self.plasma_parameters.electron_plasma_frequency,)
+                a.axhline(
+                    self.plasma_parameters.electron_gyrofrequency / self.plasma_parameters.electron_plasma_frequency, )
+                a.axhline(
+                    self.plasma_parameters.ion_gyrofrequency / self.plasma_parameters.electron_plasma_frequency, )
+                a.axvline(
+                    self.plasma_parameters.electron_inertial_length / self.plasma_parameters.debye_length, )
+                a.axvline(
+                    self.plasma_parameters.electron_inertial_length / self.plasma_parameters.ion_inertial_length, )
+                a.axvline(
+                    self.plasma_parameters.electron_inertial_length / self.plasma_parameters.electron_gyroradius, )
+                a.axvline(
+                    self.plasma_parameters.electron_inertial_length / self.plasma_parameters.ion_gyroradius, )
+
+            # adjust axes
+            a.set_xlabel(r"$kc / \omega_{pe}$", fontsize=14)
+            a.set_ylabel(r"$Re(\omega / \omega_{pe})$", fontsize=14)
+            a.set_yscale("log")
+            a.set_xscale("log")
+
+            a.tick_params(
+                which="both",
+                direction="in",
+                width=1,
+                labelsize=14,
+                right=True,
+                length=5,
+            )
+
+            # annotate
+            text = (
+                rf"$v_A/c_s = {self.plasma_parameters.alfven_speed / self.plasma_parameters.sound_speed:.1f} \qquad "
+                rf"c/v_A = 10^{np.log10(c / self.plasma_parameters.alfven_speed):.0f} \qquad "
+                f"\\theta = {inputs['theta'].value:.0f}"
+                "^{\\circ}$"
+            )
+            a.text(0.25, 0.95, text, transform=a.transAxes, fontsize=18)
+            a.legend(loc="upper left", markerscale=5, fontsize=14)
+
+            plt.show()
 
 
+if __name__ == "__main__":
+    density = 1e13 * u.cm ** (-3)
+    magnetic_field = 250 * u.G
+    electron_temperature = 5 * u.eV
+    ion_temperature = 1 * u.eV
+    ion_species = Particle('p+')
+    shock_velocity = 150e3 * u.m / u.s
+    shock_theta = 0.0 * u.deg
+    gamma = 5 / 3
+
+    plasma = Plasma(density,
+                           magnetic_field,
+                           electron_temperature,
+                           ion_temperature,
+                           ion_species)
+
+    theta = 0.0 * u.deg
+    plasma.two_fluid_dispersion(theta, verbose=True)
