@@ -134,8 +134,9 @@ class Plasma:
         if k_space is None:
             k_space = 10**np.linspace(-4,4, 100000)
 
+        k_space *= u.rad / u.m
         inputs = {
-            "k": k_space * u.rad / u.m,
+            "k": k_space,
             "theta": theta,
             "n_i": self.n,
             "B": self.B,
@@ -271,4 +272,5 @@ if __name__ == "__main__":
                            ion_species)
 
     theta = 0.0 * u.deg
-    plasma.two_fluid_dispersion(theta, verbose=True)
+    plasma.two_fluid_dispersion(theta, verbose=False)
+    plasma.two_fluid_dispersion(45*u.deg, verbose=False)
