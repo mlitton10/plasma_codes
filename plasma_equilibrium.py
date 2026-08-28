@@ -147,6 +147,8 @@ class Plasma:
         # compute
         omegas = two_fluid(**inputs)
         k_prime = inputs["k"] * self.plasma_parameters.electron_inertial_length
+        v_phases = {keys: values/k_space for keys, values in omegas.items()}
+        v_groups = {keys: np.gradient(values, k_space) for keys, values in omegas.items()}
 
         if plot:
             f,a = plt.subplots(1,1)
@@ -212,6 +214,45 @@ class Plasma:
 
             plt.show()
 
+            f, a = plt.subplots(1, 1)
+            a.plot(
+                k_prime,
+                np.real(v_phases["fast_mode"] / c),
+                "r",
+                label="Fast",
+            )
+
+            a.plot(
+                k_prime,
+                np.real(v_phases["alfven_mode"] / c),
+                "b",
+                label="Alfvén",
+            )
+            a.plot(
+                k_prime,
+                np.real(v_phases["acoustic_mode"] / c),
+                "g",
+                ms=1,
+                label="Acoustic",
+            )
+
+            a.set_xlabel(r"$kc / \omega_{pe}$", fontsize=14)
+            a.set_ylabel(r"$Re(\omega / \omega_{pe})$", fontsize=14)
+            a.set_yscale("log")
+            a.set_xscale("log")
+
+            a.tick_params(
+                which="both",
+                direction="in",
+                width=1,
+                labelsize=14,
+                right=True,
+                length=5,
+            )
+
+            plt.show()
+
+        return omegas, v_phases, v_groups, k_space
 
 if __name__ == "__main__":
     density = 1e13 * u.cm ** (-3)
