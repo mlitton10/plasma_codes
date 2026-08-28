@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 import numpy as np
 from astropy.units import Quantity
 from matplotlib import pyplot as plt
@@ -39,7 +41,7 @@ class Plasma:
 
 
 
-    def frequencies(self):
+    def frequencies(self) -> Dict[str, Quantity[Any]]:
         electron_gyrofrequency = gyrofrequency(self.B, self.electron)
         ion_gyrofrequency = gyrofrequency(self.B, self.ion)
 
@@ -72,7 +74,7 @@ class Plasma:
         }
         return frequencies
 
-    def lengths(self):
+    def lengths(self) -> Dict[str, Quantity[Any]]:
         debye_length = Debye_length(self.T_e, self.n)
         electron_gyroradius = gyroradius(self.B, particle=self.electron, T=self.T_e)
         ion_gyroradius = gyroradius(self.B, particle=self.ion, T=self.T_e)
@@ -95,7 +97,7 @@ class Plasma:
         }
         return lengths
 
-    def velocities(self):
+    def velocities(self) -> Dict[str, Quantity[Any]]:
         alfven_speed = Alfven_speed(self.B, self.n, self.ion)
         sound_speed = ion_sound_speed(self.T_e, self.T_i, self.ion)
         electron_thermal_velocity = thermal_speed(self.T_e, self.electron, method='nrl', ndim=3)
@@ -109,7 +111,7 @@ class Plasma:
         }
         return velocities
 
-    def misc(self):
+    def misc(self) -> Dict[str, Quantity[Any]]:
         spritzer_resistivity = Spitzer_resistivity(self.T_e, self.n, species=(self.electron, self.electron))
 
         beta_val = beta(self.T_e, self.n, self.B)
