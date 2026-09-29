@@ -7,7 +7,7 @@ from plasmapy.dispersion.analytical import two_fluid
 from plasmapy.formulary import Debye_length, gyroradius, inertial_length, mean_free_path, collision_frequency, \
     Spitzer_resistivity, beta, Debye_number, Hall_parameter, gyrofrequency, lower_hybrid_frequency, \
     upper_hybrid_frequency, plasma_frequency, Bohm_diffusion, Alfven_speed, ion_sound_speed, thermal_speed
-from plasmapy.particles import Particle
+from plasmapy.particles import Particle, CustomParticle
 from schemas import PlasmaParameters
 
 import astropy.units as u
@@ -41,7 +41,7 @@ class Plasma:
 
 
 
-    def frequencies(self) -> Dict[str, Quantity[Any]]:
+    def frequencies(self) -> Dict[str, Quantity]:
         electron_gyrofrequency = gyrofrequency(self.B, self.electron)
         ion_gyrofrequency = gyrofrequency(self.B, self.ion)
 
@@ -54,12 +54,24 @@ class Plasma:
         electron_electron_collision_freq = collision_frequency(self.T_e,
                                                                self.n,
                                                                 (self.electron, self.electron))
-        electron_ion_collision_freq = collision_frequency(self.T_e,
-                                                          self.n,
-                                                          (self.electron, self.ion))
-        ion_ion_collision_freq = collision_frequency(self.T_i,
-                                                     self.n,
-                                                     (self.ion, self.ion))
+        try:
+            if self.ion.symbol == 'p+':
+                electron_ion_collision_freq = collision_frequency(self.T_e,
+                                                                  self.n,
+                                                                  (self.electron, Particle("p+")))
+                ion_ion_collision_freq = collision_frequency(self.T_i,
+                                                             self.n,
+                                                             (Particle("p+"), Particle("p+")))
+            else:
+                electron_ion_collision_freq = collision_frequency(self.T_e,
+                                                                  self.n,
+                                                                  (self.electron, self.ion))
+                ion_ion_collision_freq = collision_frequency(self.T_i,
+                                                             self.n,
+                                                             (self.ion, self.ion))
+        except TypeError:
+            electron_ion_collision_freq = np.nan
+            ion_ion_collision_freq = np.nan
 
         frequencies = {
             'electron_gyrofrequency': electron_gyrofrequency,
@@ -74,16 +86,25 @@ class Plasma:
         }
         return frequencies
 
-    def lengths(self) -> Dict[str, Quantity[Any]]:
+    def lengths(self) -> Dict[str, Quantity]:
         debye_length = Debye_length(self.T_e, self.n)
         electron_gyroradius = gyroradius(self.B, particle=self.electron, T=self.T_e)
         ion_gyroradius = gyroradius(self.B, particle=self.ion, T=self.T_e)
         electron_inertial_length = inertial_length(self.n, self.electron)
         ion_inertial_length  = inertial_length(self.n, self.ion)
 
+
         electron_electron_mfp = mean_free_path(self.T_e, self.n, (self.electron, self.electron))
-        electron_ion_mfp = mean_free_path(self.T_e, self.n, (self.electron, self.ion))
-        ion_ion_mfp = mean_free_path(self.T_i, self.n, (self.ion, self.ion))
+        try:
+            if self.ion.symbol == 'p+':
+                electron_ion_mfp = mean_free_path(self.T_e, self.n, (self.electron, Particle("p+")))
+                ion_ion_mfp = mean_free_path(self.T_i, self.n, (Particle("p+"), Particle("p+")))
+            else:
+                electron_ion_mfp = mean_free_path(self.T_e, self.n, (self.electron, self.ion))
+                ion_ion_mfp = mean_free_path(self.T_i, self.n, (self.ion, self.ion))
+        except TypeError:
+            electron_ion_mfp = np.nan
+            ion_ion_mfp = np.nan
 
         lengths = {
             'debye_length': debye_length,
@@ -97,7 +118,7 @@ class Plasma:
         }
         return lengths
 
-    def velocities(self) -> Dict[str, Quantity[Any]]:
+    def velocities(self) -> Dict[str, Quantity]:
         alfven_speed = Alfven_speed(self.B, self.n, self.ion)
         sound_speed = ion_sound_speed(self.T_e, self.T_i, self.ion)
         electron_thermal_velocity = thermal_speed(self.T_e, self.electron, method='nrl', ndim=3)
@@ -111,13 +132,21 @@ class Plasma:
         }
         return velocities
 
-    def misc(self) -> Dict[str, Quantity[Any]]:
+    def misc(self) -> Dict[str, Quantity]:
         spritzer_resistivity = Spitzer_resistivity(self.T_e, self.n, species=(self.electron, self.electron))
 
         beta_val = beta(self.T_e, self.n, self.B)
         debye_number = Debye_number(self.T_e, self.n)
-        electron_hall_parameter = Hall_parameter(self.n, self.T_e, self.B, self.ion, self.electron)
-        ion_hall_parameter = Hall_parameter(self.n, self.T_i, self.B, self.ion, self.ion)
+        try:
+            if self.ion.symbol == 'p+':
+                electron_hall_parameter = Hall_parameter(self.n, self.T_e, self.B, Particle('p+'), self.electron)
+                ion_hall_parameter = Hall_parameter(self.n, self.T_i, self.B, Particle('p+'), Particle('p+'))
+            else:
+                electron_hall_parameter = Hall_parameter(self.n, self.T_e, self.B, self.ion, self.electron)
+                ion_hall_parameter = Hall_parameter(self.n, self.T_i, self.B, self.ion, self.ion)
+        except TypeError:
+            electron_hall_parameter = np.nan
+            ion_hall_parameter = np.nan
 
         bohm_diffusion = Bohm_diffusion(self.T_e, self.B)
 
@@ -267,11 +296,32 @@ if __name__ == "__main__":
     shock_theta = 0.0 * u.deg
     gamma = 5 / 3
 
+    density = 1e12 * u.cm ** (-3)
+    magnetic_field = 1000 * u.G
+    electron_temperature = 5 * u.eV
+    ion_temperature = 1 * u.eV
+    ion_species = Particle('p+')
+    shock_velocity = 300e3 * u.m / u.s
+    shock_theta = 0.0 * u.deg
+    gamma = 5 / 3
+
     plasma = Plasma(density,
-                           magnetic_field,
-                           electron_temperature,
-                           ion_temperature,
-                           ion_species)
+                   magnetic_field,
+                   electron_temperature,
+                   ion_temperature,
+                   ion_species)
+
+    print("omega_pe =", plasma.plasma_parameters.electron_plasma_frequency)
+    print("omega_pi =", plasma.plasma_parameters.ion_plasma_frequency)
+    print('omega_ci =', plasma.plasma_parameters.ion_gyrofrequency)
+
+    print('delta_e =', plasma.plasma_parameters.electron_inertial_length)
+    print('delta_i =', plasma.plasma_parameters.ion_inertial_length)
+
+    print(plasma.plasma_parameters.alfven_speed)
+
+    print('v_th_e', plasma.plasma_parameters.electron_thermal_velocity/ c)
+    print('v_th_e', plasma.plasma_parameters.ion_thermal_velocity/ c)
 
     theta = 0.0 * u.deg
     plasma.two_fluid_dispersion(theta, verbose=False)
