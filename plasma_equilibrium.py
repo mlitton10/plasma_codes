@@ -89,7 +89,7 @@ class Plasma:
     def lengths(self) -> Dict[str, Quantity]:
         debye_length = Debye_length(self.T_e, self.n)
         electron_gyroradius = gyroradius(self.B, particle=self.electron, T=self.T_e)
-        ion_gyroradius = gyroradius(self.B, particle=self.ion, T=self.T_e)
+        ion_gyroradius = gyroradius(self.B, particle=self.ion, T=self.T_i)
         electron_inertial_length = inertial_length(self.n, self.electron)
         ion_inertial_length  = inertial_length(self.n, self.ion)
 
