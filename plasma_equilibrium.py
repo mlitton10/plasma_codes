@@ -161,6 +161,9 @@ class Plasma:
             'electron_hall_parameter': electron_hall_parameter,
             'ion_hall_parameter': ion_hall_parameter,
             'bohm_diffusion': bohm_diffusion,
+            'mass_density': mhd_mass_density(self.n, self.ion),
+            'thermal_pressure': thermal_pressure(self.n, self.T_e, self.T_i),
+            'total_beta': total_beta(self.n, self.B, self.T_e, self.T_i),
         }
 
         return misc
