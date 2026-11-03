@@ -37,7 +37,7 @@ class PlasmaParameters:
     ion_thermal_velocity: Quantity
 
     spritzer_resistivity: Quantity
-    beta: Quantity
+    beta: Quantity                     # ELECTRON beta (plasmapy beta(T_e, n, B))
     debye_number: Quantity
     electron_hall_parameter: Quantity
     ion_hall_parameter: Quantity
