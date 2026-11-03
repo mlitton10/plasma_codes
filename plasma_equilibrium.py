@@ -9,6 +9,7 @@ from plasmapy.formulary import Debye_length, gyroradius, inertial_length, mean_f
     upper_hybrid_frequency, plasma_frequency, Bohm_diffusion, Alfven_speed, ion_sound_speed, thermal_speed
 from plasmapy.particles import Particle, CustomParticle
 from schemas import PlasmaParameters
+from plasma_codes.formulary import mhd_mass_density, thermal_pressure, total_beta
 
 import astropy.units as u
 from astropy.constants import c
