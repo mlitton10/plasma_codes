@@ -152,7 +152,6 @@ class Plasma:
         except TypeError:
             electron_hall_parameter = np.nan
             ion_hall_parameter = np.nan
-
         bohm_diffusion = Bohm_diffusion(self.T_e, self.B)
 
         misc = {
