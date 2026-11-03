@@ -133,7 +133,12 @@ class Plasma:
         return velocities
 
     def misc(self) -> Dict[str, Quantity]:
-        spritzer_resistivity = Spitzer_resistivity(self.T_e, self.n, species=(self.electron, self.electron))
+        try:
+            ion_partner = Particle("p+") if self.ion.symbol == 'p+' else self.ion
+            spritzer_resistivity = Spitzer_resistivity(self.T_e, self.n,
+                                                       species=(self.electron, ion_partner))
+        except TypeError:
+            spritzer_resistivity = np.nan
 
         beta_val = beta(self.T_e, self.n, self.B)
         debye_number = Debye_number(self.T_e, self.n)
