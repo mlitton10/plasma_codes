@@ -32,7 +32,7 @@ class PlasmaParameters:
     ion_ion_mfp: Quantity
 
     alfven_speed: Quantity
-    sound_speed: Quantity
+    sound_speed: Quantity              # plasmapy ion_sound_speed (gamma_e=1, gamma_i=3)
     electron_thermal_velocity: Quantity
     ion_thermal_velocity: Quantity
 
