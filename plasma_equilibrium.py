@@ -172,7 +172,7 @@ class Plasma:
         if k_space is None:
             k_space = 10**np.linspace(-4,4, 100000)
 
-        k_space *= u.rad / u.m
+        k_space = np.asarray(k_space) * u.rad / u.m
         inputs = {
             "k": k_space,
             "theta": theta,
